@@ -10,15 +10,15 @@ const GIF = Buffer.from(
 
 export async function GET(req: NextRequest, { params }: { params: { code: string } }) {
   try {
-    const { rows } = await sql`SELECT code FROM links WHERE code = ${params.code}`;
+    const rows = await sql`SELECT code FROM links WHERE code = ${params.code}`;
     if (rows[0]) await recordVisit(params.code, 'pixel');
   } catch { /* serve pixel regardless */ }
 
   return new NextResponse(GIF, {
     headers: {
-      'Content-Type': 'image/gif',
+      'Content-Type':  'image/gif',
       'Cache-Control': 'no-store, no-cache, must-revalidate',
-      'Pragma': 'no-cache',
+      'Pragma':        'no-cache',
     },
   });
 }

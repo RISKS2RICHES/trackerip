@@ -6,13 +6,11 @@ import BBCPage from './BBCPage';
 export const dynamic = 'force-dynamic';
 
 export default async function TrackingPage({ params }: { params: { code: string } }) {
-  const { code } = params;
-
-  const { rows } = await sql`SELECT destination FROM links WHERE code = ${code}`;
+  const rows = await sql`SELECT destination FROM links WHERE code = ${params.code}`;
   if (!rows[0]) notFound();
 
   const destination = rows[0].destination as string;
-  await recordVisit(code, 'redirect');
+  await recordVisit(params.code, 'redirect');
 
-  return <BBCPage code={code} destination={destination} />;
+  return <BBCPage code={params.code} destination={destination} />;
 }

@@ -20,7 +20,9 @@ export async function createLink(formData: FormData) {
   await sql`
     INSERT INTO links (code, destination, label)
     VALUES (${code}, ${destination}, ${label})
-    ON CONFLICT (code) DO UPDATE SET destination = EXCLUDED.destination, label = EXCLUDED.label
+    ON CONFLICT (code) DO UPDATE
+      SET destination = EXCLUDED.destination,
+          label       = EXCLUDED.label
   `;
   revalidatePath('/admin');
 }
@@ -38,8 +40,8 @@ export async function signIn(formData: FormData) {
   cookies().set('admin_auth', secret, {
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
-    path: '/',
+    maxAge:   60 * 60 * 24 * 7,
+    path:     '/',
   });
 
   redirect('/admin');

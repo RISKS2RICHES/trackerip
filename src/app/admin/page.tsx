@@ -10,56 +10,52 @@ export default async function AdminPage({
 }: {
   searchParams: { code?: string };
 }) {
-  const jar = cookies();
+  const jar    = cookies();
   const secret = process.env.ADMIN_SECRET ?? 'AdminTrack123!';
   const authed = jar.get('admin_auth')?.value === secret;
 
-  if (!authed) {
-    return <LoginPage />;
-  }
+  if (!authed) return <LoginPage />;
 
-  // Try to query — if DB not set up yet, show a helpful message
   try {
     const filterCode = searchParams.code ?? null;
 
-    const { rows: allLinks } = await sql`SELECT * FROM links ORDER BY created_at DESC`;
+    const allLinks = await sql`SELECT * FROM links ORDER BY created_at DESC`;
 
-    const captureResult = filterCode
+    const captures = filterCode
       ? await sql`SELECT * FROM captures WHERE code = ${filterCode} ORDER BY id DESC LIMIT 500`
       : await sql`SELECT * FROM captures ORDER BY id DESC LIMIT 500`;
-    const captures = captureResult.rows;
 
-    const { rows: statsRows } = filterCode
+    const statsRows = filterCode
       ? await sql`
           SELECT
-            COUNT(*)                                              AS total,
-            COUNT(DISTINCT ip)                                    AS unique_ips,
+            COUNT(*)                                             AS total,
+            COUNT(DISTINCT ip)                                   AS unique_ips,
             COUNT(DISTINCT geo_country)
-              FILTER (WHERE geo_country IS NOT NULL)              AS countries,
-            COUNT(*) FILTER (WHERE precise_lat IS NOT NULL)       AS with_gps
+              FILTER (WHERE geo_country IS NOT NULL)             AS countries,
+            COUNT(*) FILTER (WHERE precise_lat IS NOT NULL)      AS with_gps
           FROM captures WHERE code = ${filterCode}
         `
       : await sql`
           SELECT
-            COUNT(*)                                              AS total,
-            COUNT(DISTINCT ip)                                    AS unique_ips,
+            COUNT(*)                                             AS total,
+            COUNT(DISTINCT ip)                                   AS unique_ips,
             COUNT(DISTINCT geo_country)
-              FILTER (WHERE geo_country IS NOT NULL)              AS countries,
-            COUNT(*) FILTER (WHERE precise_lat IS NOT NULL)       AS with_gps
+              FILTER (WHERE geo_country IS NOT NULL)             AS countries,
+            COUNT(*) FILTER (WHERE precise_lat IS NOT NULL)      AS with_gps
           FROM captures
         `;
 
     return (
       <AdminShell
-        allLinks={allLinks as never}
-        captures={captures as never}
+        allLinks={allLinks  as never}
+        captures={captures  as never}
         stats={statsRows[0] as never}
         filterCode={filterCode}
       />
     );
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const needsSetup = msg.includes('does not exist') || msg.includes('relation') || msg.includes('POSTGRES');
+    const msg        = err instanceof Error ? err.message : String(err);
+    const needsSetup = msg.includes('does not exist') || msg.includes('relation') || msg.includes('connection');
     return <SetupPrompt needsSetup={needsSetup} error={msg} />;
   }
 }
@@ -105,14 +101,11 @@ function LoginPage() {
               fontSize: 14, outline: 'none', marginBottom: 14, display: 'block',
             }}
           />
-          <button
-            type="submit"
-            style={{
-              width: '100%', background: '#1f3a28', border: '1px solid #2e5c3a',
-              color: '#6dcc82', padding: 10, borderRadius: 4,
-              fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
+          <button type="submit" style={{
+            width: '100%', background: '#1f3a28', border: '1px solid #2e5c3a',
+            color: '#6dcc82', padding: 10, borderRadius: 4,
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          }}>
             Sign in
           </button>
         </form>
@@ -139,34 +132,29 @@ function SetupPrompt({ needsSetup, error }: { needsSetup: boolean; error: string
           <>
             <p style={{ color: '#888', fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
               The database is connected but tables haven&apos;t been created yet.
-              Visit the setup endpoint to initialise them:
+              Click below to initialise them:
             </p>
-            <a
-              href="/api/setup"
-              style={{
-                display: 'block', background: '#1f3a28', border: '1px solid #2e5c3a',
-                color: '#6dcc82', padding: '10px 16px', borderRadius: 4,
-                fontSize: 14, fontWeight: 600, textDecoration: 'none', textAlign: 'center',
-              }}
-            >
+            <a href="/api/setup" style={{
+              display: 'block', background: '#1f3a28', border: '1px solid #2e5c3a',
+              color: '#6dcc82', padding: '10px 16px', borderRadius: 4,
+              fontSize: 14, fontWeight: 600, textDecoration: 'none', textAlign: 'center',
+            }}>
               Run /api/setup →
             </a>
             <p style={{ color: '#555', fontSize: 12, marginTop: 12 }}>
-              After setup completes, come back and refresh this page.
+              After it shows &#123;&quot;ok&quot;:true&#125; come back and refresh.
             </p>
           </>
         ) : (
           <>
             <p style={{ color: '#888', fontSize: 13, marginBottom: 12 }}>
-              Make sure you have connected a Postgres database in the Vercel Storage tab
-              and the environment variables are set.
+              Check that your Postgres database is connected in the Vercel Storage tab
+              and the environment variables have been deployed.
             </p>
             <pre style={{
               background: '#0a0a0a', padding: 12, borderRadius: 4,
               fontSize: 11, color: '#666', overflow: 'auto',
-            }}>
-              {error}
-            </pre>
+            }}>{error}</pre>
           </>
         )}
       </div>

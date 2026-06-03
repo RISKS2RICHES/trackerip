@@ -1,6 +1,28 @@
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 
-export { sql };
+// Module-level client, created lazily on first query
+let _client: ReturnType<typeof neon> | undefined;
+
+function db() {
+  if (!_client) {
+    const url =
+      process.env.DATABASE_URL ??
+      process.env.POSTGRES_URL ??
+      process.env.POSTGRES_URL_NON_POOLING ??
+      '';
+    _client = neon(url);
+  }
+  return _client;
+}
+
+// Tagged template wrapper — compatible with all call sites
+export async function sql(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<Record<string, unknown>[]> {
+  const result = await db()(strings, ...values);
+  return result as Record<string, unknown>[];
+}
 
 export async function initDb() {
   await sql`

@@ -4,10 +4,9 @@ import { sql } from '@/lib/db';
 export async function POST(req: NextRequest, { params }: { params: { code: string } }) {
   try {
     const data = await req.json().catch(() => ({}));
-    const ip =
+    const ip   =
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-      req.headers.get('x-real-ip') ??
-      '0.0.0.0';
+      req.headers.get('x-real-ip') ?? '0.0.0.0';
 
     await sql`
       UPDATE captures SET
