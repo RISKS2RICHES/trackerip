@@ -31,10 +31,16 @@ export async function deleteLink(code: string) {
 }
 
 export async function signIn(formData: FormData) {
-  const key = formData.get('key') as string;
+  const key    = formData.get('key') as string;
   const secret = process.env.ADMIN_SECRET ?? 'AdminTrack123!';
   if (key !== secret) return;
-  const jar = await cookies();
-  jar.set('admin_auth', secret, { httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+
+  cookies().set('admin_auth', secret, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  });
+
   redirect('/admin');
 }
