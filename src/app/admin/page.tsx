@@ -11,7 +11,7 @@ export default async function AdminPage({
   searchParams: { code?: string };
 }) {
   const jar = await cookies();
-  const secret = process.env.ADMIN_SECRET ?? 'changeme';
+  const secret = process.env.ADMIN_SECRET ?? 'AdminTrack123!';
   const authed = jar.get('admin_auth')?.value === secret;
 
   if (!authed) {
